@@ -49,18 +49,7 @@ fn create_icmp_packet(seq: u16) -> Vec<u8> {
         sequence_number: seq,
     };
 
-    unsafe{
-        let header_bytes = std::slice::from_raw_parts(
-            &header as *const IcmpHeader as *const u8,
-            mem::size_of::<IcmpHeader>()
-        );
-        packet[..8].copy_from_slice(header_bytes);
-    }
-
-    let cs = checksum(&packet);
-    packet[2] = (cs >> 8) as u8;
-    packet[3] = (cs & 0xFF) as u8;
-
+    
     packet 
 }
 
