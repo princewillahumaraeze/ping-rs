@@ -17,18 +17,19 @@ struct IcmpHeader {
     sequence_number: u16,
 }
 
+
 fn checksum(data: &[u8]) -> u16 {
     let mut sum =  0u32;
     let mut chunks = data.chunks_exact(2);
 
 
     for chunk in &mut chunks {
-        let value = u16::from_be_bytes([chunk[0], chunk[1]]) as u32;
-        sum = sum.wrapping_add(value);
+        let value = u16::from_be_bytes([chunk[0], chunk[1]]);
+        sum += value as u32;
     }
 
-    if let Some(&[last]) = chunks.remainder().first().map(|b| std::slice::from_ref(b)) {
-        sum = sum.wrapping_add((last as u32) << 8 );
+    if let Some(&last_byte) = chunks.remainder().first(){
+        sum += (last_byte as u32) << 8;
     }
 
     while (sum >> 16) != 0 {
