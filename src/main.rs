@@ -1,20 +1,17 @@
-use std::io::{self, Write};
-use std::mem;
+use std::io;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::os::unix::io::AsRawFd;
-use std::time::{Duration};
-use std::net::UdpSocket;
+use std::time::Instant;
 
-const ICMP_ECHO_REQUEST: u8 = 8;
-const ICMP_ECHO_REPLY: u8 = 0;
 
 #[repr(packed)]
-struct IcmpHeader {
+struct IcmpEcho {
     icmp_type: u8,
     icmp_code: u8,
     checksum: u16,
     identifier: u16,
     sequence_number: u16,
+    payload: Vec<u8>,
 }
 
 
