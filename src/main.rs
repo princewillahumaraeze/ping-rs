@@ -31,14 +31,14 @@ impl IcmpEcho{
         let mut packet = Vec::with_capacity(packet_payload_len);
 
         // Icmp Header
-        packet.push(self.icmp_type);
-        packet.push(self.icmp_code);
-        packet.push(0); //Checksum placeholder
-        packet.push(0);
-        packet.push((self.identifier >> 8) as u8);
-        packet.push((self.identifier & 0xFF) as u8);
-        packet.push((self.sequence_number >> 8) as u8);
-        packet.push((self.sequence_number & 0xFF) as u8);
+        packet.push(self.icmp_type);                        //Byte 0: Icmp Type
+        packet.push(self.icmp_code);                        //Byte 1: Icmp Code
+        packet.push(0);                                     //Byte 2: Checksum placeholder(high byte)
+        packet.push(0);                                     //Byte 3: Checksum placeholder(low byte)
+        packet.push((self.identifier >> 8) as u8);          //Byte 4: Identifier(high byte)
+        packet.push((self.identifier & 0xFF) as u8);        //Byte 5: Identifier(low byte)
+        packet.push((self.sequence_number >> 8) as u8);     //Byte 6: Sequence number(high byte)
+        packet.push((self.sequence_number & 0xFF) as u8);   //Byte 7: Sequence number(low byte)
 
         // Payload
         packet.extend_from_slice(&self.payload);
