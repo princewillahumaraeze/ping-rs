@@ -74,20 +74,7 @@ fn checksum(data: &[u8]) -> u16 {
     !(sum as u16)
 }
 
-fn create_icmp_packet(seq: u16) -> Vec<u8> {
-    let mut packet = vec![0u8; 8]; // ICMP header 8 bytes
 
-    let header = IcmpHeader{
-        icmp_type: ICMP_ECHO_REQUEST,
-        icmp_code:0,
-        checksum:0,
-        identifier: 0x1234,
-        sequence_number: seq,
-    };
-
-    
-    packet 
-}
 
 fn main() {
     println!("Hello, world!");
