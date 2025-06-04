@@ -1,10 +1,9 @@
 use std::io;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::{IpAddr, UdpSocket};
 use std::os::unix::io::AsRawFd;
 use std::time::Instant;
 
 
-#[repr(packed)]
 struct IcmpEcho {
     icmp_type: u8,
     icmp_code: u8,
@@ -27,7 +26,8 @@ impl IcmpEcho{
     }
 
     fn to_bytes(&self) -> Vec<u8> {
-        let packet_payload_len = 8 + self.payload.len();
+        let payload_clone = self.payload.clone();
+        let packet_payload_len = 8 + payload_clone.len();
         let mut packet = Vec::with_capacity(packet_payload_len);
 
         // Icmp Header
@@ -41,7 +41,7 @@ impl IcmpEcho{
         packet.push((self.sequence_number & 0xFF) as u8);   //Byte 7: Sequence number(low byte)
 
         // Payload
-        packet.extend_from_slice(&self.payload);
+        packet.extend_from_slice(&payload_clone);
 
         // Calculate checksum over entire packet
         let cs = checksum(&packet);
@@ -76,6 +76,61 @@ fn checksum(data: &[u8]) -> u16 {
 
 
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> io::Result<()>{
+    let dest_ip = "127.0.0.1".parse::<IpAddr>().unwrap();
+
+    //Use UDPSocket to access the raw file descriptor
+    let socket = UdpSocket::bind("0.0.0.0:0")?; 
+    socket.connect((dest_ip, 0))?;
+    let raw_fd = socket.as_raw_fd();
+
+    let identifier = 0x1234;
+    let sequence = 1;
+    let payload = b"Hello PING-RS".to_vec();
+
+    let icmp_packet = IcmpEcho::new(identifier, sequence, payload);
+    let packet = icmp_packet.to_bytes();
+
+    let start = Instant::now();
+    let bytes_sent = unsafe {
+        libc::sendto(
+            raw_fd,
+            packet.as_ptr() as *const _,
+            packet.len(),
+            0,
+            std::ptr::null(),
+            0,
+        )
+    };
+
+    if bytes_sent < 0 {
+        return Err(io::Error::last_os_error());
+    }
+
+    let mut buf = [0u8; 1024];
+    // let len = socket.recv(&mut buf);
+    let len = unsafe {
+    libc::recv(
+        raw_fd,
+        buf.as_mut_ptr() as *mut _,
+        buf.len(),
+        0,
+    )
+};
+
+if len < 0 {
+    return Err(io::Error::last_os_error());
+}
+
+    let elapsed = start.elapsed();
+
+    println!(
+        "Reply from {}: bytes={:?} time={:.2?}",
+        dest_ip,
+        len,
+        elapsed
+    );
+
+    Ok(())
+
 }
